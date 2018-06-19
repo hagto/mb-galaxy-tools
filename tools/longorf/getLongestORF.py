@@ -29,110 +29,98 @@ import sys,re;
 
 def findlongestOrf(transcriptDict,old_seqID):
 	#write for previous seqID
-	prevTranscript = transcriptDict[old_seqID];
+	prevTranscript = transcriptDict[old_seqID]
 	#print prevTranscript
-	i_max = 0;
+	i_max = 0
 
 	#find longest orf in transcript
 	for i in range(0,len(prevTranscript)):
 		if(prevTranscript[i][2] > prevTranscript[i_max][2]):
-			i_max = i;
+			i_max = i
 	for i in range(0,len(prevTranscript)):
 
-		prevStart = prevTranscript[i][0];
-		prevEnd = prevTranscript[i][1];
-		prevLength = prevTranscript[i][2];
+		prevStart = prevTranscript[i][0]
+		prevEnd = prevTranscript[i][1]
+		prevLength = prevTranscript[i][2]
 
-#				output = old_seqID + "\t" + "\t".join(prevTranscript[i]);
-		output = str(old_seqID) + "\t" + str(prevStart) + "\t" + str(prevEnd) + "\t" + str(prevLength);
+		output = str(old_seqID) + "\t" + str(prevStart) + "\t" + str(prevEnd) + "\t" + str(prevLength)
 		
 		if (end - start > 0):
-			output+="\tForward";
+			output+="\tForward"
 		else:
-			output+="\tReverse";
+			output+="\tReverse"
 
 
 		if(i == i_max):
-			output += "\ty\n";
+			output += "\ty\n"
 		else:
-			output += "\tn\n";
+			output += "\tn\n"
 
-		OUTPUT_ORF_SUMMARY.write(output);
+		OUTPUT_ORF_SUMMARY.write(output)
 
-	transcriptDict.pop(old_seqID, None);
-	return None;
+	transcriptDict.pop(old_seqID, None)
+	return None
 
-INPUT = open(sys.argv[1],"r");
-OUTPUT_FASTA = open(sys.argv[2],"w");
-OUTPUT_ORF_SUMMARY = open(sys.argv[3],"w");
+INPUT = open(sys.argv[1],"r")
+OUTPUT_FASTA = open(sys.argv[2],"w")
+OUTPUT_ORF_SUMMARY = open(sys.argv[3],"w")
 
-seqID = "";
-old_seqID = "";
-lengthDict = {};
-seqDict = {};
+seqID = ""
+old_seqID = ""
+lengthDict = {}
+seqDict = {}
 headerDict = {}
-transcriptDict = {};
+transcriptDict = {}
 
-skip = False;
+skip = False
 
-OUTPUT_ORF_SUMMARY.write("seqID\tstart\tend\tlength\torientation\tlongest\n");
+OUTPUT_ORF_SUMMARY.write("seqID\tstart\tend\tlength\torientation\tlongest\n")
 
 for line in INPUT:
-	line = line.strip();
-#	print line;
+	line = line.strip()
 	if(re.match(">",line)): #header
-
 #TODO remove ; at end of lines
-#TODO better seqID = "_".join(line.split(">")[1].split("_")[:-1]) ?
-		seqID = line.split(">")[1].split("_")[0];
-		start = int (re.search('\ \[(\d+)\ -', line).group(1));
-		end = int (re.search('-\ (\d+)\]',line).group(1));
-		length = abs(end - start);
+		seqID = "_".join(line.split(">")[1].split("_")[:-1])
+		#seqID = line.split(">")[1].split("_")[0]
+		start = int (re.search('\ \[(\d+)\ -', line).group(1))
+		end = int (re.search('-\ (\d+)\]',line).group(1))
+		length = abs(end - start)
 			
 
 		if(seqID not in transcriptDict and old_seqID != ""): #new transcript
-
-			findlongestOrf(transcriptDict,old_seqID);
+			findlongestOrf(transcriptDict,old_seqID)
 			
 		if seqID not in transcriptDict:
-			transcriptDict[seqID] = [];
-
-		transcriptDict[seqID].append([start,end,length]);
-
-
+			transcriptDict[seqID] = []
+		transcriptDict[seqID].append([start,end,length])
 
 		if(seqID not in lengthDict and old_seqID != ""): #new transcript
-
 			#write FASTA
-			OUTPUT_FASTA.write(headerDict[old_seqID]+"\n"+seqDict[old_seqID]+"\n");
-
-
+			OUTPUT_FASTA.write(headerDict[old_seqID]+"\n"+seqDict[old_seqID]+"\n")
 			#delete old dict entry
-			headerDict.pop(old_seqID, None);
-			seqDict.pop(old_seqID, None);
-			lengthDict.pop(old_seqID, None);
+			headerDict.pop(old_seqID, None)
+			seqDict.pop(old_seqID, None)
+			lengthDict.pop(old_seqID, None)
 
 #TODO for sequences of old length output all/a random one of the same length seqs? 
+		#if several longest sequences exist with the same length, the dictionary saves the last occuring.
 		if(seqID not in lengthDict or length >= lengthDict[seqID]):
-			headerDict[seqID] = line;
-			lengthDict[seqID] = length;
-			seqDict[seqID] = "";
-			skip = False;
-
+			headerDict[seqID] = line
+			lengthDict[seqID] = length
+			seqDict[seqID] = ""
+			skip = False
 		else:
-			skip = True;
-			next;
-
-
-		old_seqID = seqID;
+			skip = True
+			next
+		old_seqID = seqID
 	elif(skip):
-		next;
+		next
 	else:
-		seqDict[seqID] += line;
+		seqDict[seqID] += line
 
-OUTPUT_FASTA.write(headerDict[old_seqID]+"\n"+seqDict[old_seqID]);
-findlongestOrf(transcriptDict,old_seqID);
+OUTPUT_FASTA.write(headerDict[old_seqID]+"\n"+seqDict[old_seqID])
+findlongestOrf(transcriptDict,old_seqID)
 
-INPUT.close();
-OUTPUT_FASTA.close();
-OUTPUT_ORF_SUMMARY.close();
+INPUT.close()
+OUTPUT_FASTA.close()
+OUTPUT_ORF_SUMMARY.close()
